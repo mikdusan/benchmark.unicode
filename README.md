@@ -5,9 +5,9 @@ UTF8 decoders. The decoders are written in Zig or C.
 ##### ZIG/HOST INFORMATION
 ```
 $ zig version
-0.3.0+1d09cdaa
+0.3.0+85575704
 $ git describe
-0.3.0-775-g1d09cdaa
+0.3.0-778-g85575704
 $ sw_vers 
 ProductName:    Mac OS X
 ProductVersion: 10.11.6
@@ -28,15 +28,15 @@ $ zig build install -Drelease-fast
 
 ##### RUN BENCHMARK
 ```
-$ bin/bench -1 -m 10 -r 3 dat/wellons.dat
-reading 8.00 MiB UTF-8 test data 'dat/wellons.dat'...
+$ bin/bench -3 -m 10 -r 3 dat/wellons.dat
 benchmark: mikdusan.2 ----------------------------------------------------------------
-  ::  225.75 MiB/s, 160.00 MiB data, 3.36M codepoints, 0 errors
-  ::  225.02 MiB/s, 160.00 MiB data, 3.36M codepoints, 0 errors
+  ::  224.52 MiB/s, 80.00 MiB data, 3.36M codepoints, 0 errors
+  ::  223.97 MiB/s, 80.00 MiB data, 3.36M codepoints, 0 errors
+  ::  224.72 MiB/s, 80.00 MiB data, 3.36M codepoints, 0 errors
 
-  average rate:           225.38 MiB/s
-  total UTF8 data:        320.00 MiB
-  total UTF8 codepoints:  6.72M
+  average rate:           224.41 MiB/s
+  total UTF8 data:        240.00 MiB
+  total UTF8 codepoints:  10.08M
   total UTF8 errors:      0
 ```
 
