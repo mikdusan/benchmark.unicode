@@ -90,11 +90,10 @@ atom_hoehrmann_spin(
     uint64_t ncodepoints = 0;
     unsigned char const *p = begin;
     for (; p < end; ++p) {
-        if (bh_utf8_decode(&state, &codepoint, *p) == UTF8_REJECT) {
-            nerrors += 1;
-        }
-        else {
+        if (!bh_utf8_decode(&state, &codepoint, *p)) {
             ncodepoints += 1;
+        } else if (state == UTF8_REJECT) {
+            nerrors += 1;
         }
     }
     *num_errors += nerrors;
