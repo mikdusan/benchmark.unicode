@@ -395,7 +395,7 @@ fn splitLines(bytes: []const u8, lines: *std.ArrayList([]const u8)) !void {
                 end = i;
             },
             else => {
-                end += 1;
+                end = i + 1;
             },
         }
     } else if (end > begin) {

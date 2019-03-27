@@ -60,35 +60,35 @@ usage: bin/bench [-0123456hl] [-mrsv] [file]
 ```
 $ bin/bench -lv
   ##  Benchmark Case
-  --  --------------------------------------------------------------
+  --  ---------------------------------------------------------------
    0  hoehrmann
       - DFA-based C implementation
-      - source: http://bjoern.hoehrmann.de/utf-8/decoder/dfa
-  --  --------------------------------------------------------------
+      - source: http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
+  --  ---------------------------------------------------------------
    1  mikdusan.0
       - novice Zig implementation
-      - iterator returns EOF (via optional
-      - iterator returns illegal encoding (via error union
-      - algorithm similar to `wellons.simple
-  --  --------------------------------------------------------------
+      - iterator returns EOF (via optional)
+      - iterator returns illegal encoding (via error union)
+      - algorithm similar to `wellons.simple`
+  --  ---------------------------------------------------------------
    2  mikdusan.1
       - delta from `mikdusan.0`
-      - iterator does NOT return EO
-  --  --------------------------------------------------------------
+      - iterator does NOT return EOF
+  --  ---------------------------------------------------------------
    3  mikdusan.2
       - delta from `mikdusan.0`
-      - iterator returns EOF (via overloaded codepoint private-use
-      - iterator returns illegal encoding (via codepoint private-use
-  --  --------------------------------------------------------------
+      - iterator returns EOF (via overloaded codepoint private-use)
+      - iterator returns illegal encoding (via codepoint private-use)
+  --  ---------------------------------------------------------------
    4  std.unicode
       - Zig std.unicode implementation
-  --  --------------------------------------------------------------
+  --  ---------------------------------------------------------------
    5  wellons.branchless
       - branchless C implementation
-      - source: https://github.com/skeeto/branchless-utf
-      - four-byte reads, buffer end requires +3 bytes zero-paddin
-  --  --------------------------------------------------------------
+      - source: https://github.com/skeeto/branchless-utf8
+      - four-byte reads, buffer end requires +3 bytes zero-padding
+  --  ---------------------------------------------------------------
    6  wellons.simple
       - simple C implementation
-      - source: https://github.com/skeeto/branchless-utf
+      - source: https://github.com/skeeto/branchless-utf8
 ```
