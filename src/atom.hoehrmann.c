@@ -97,6 +97,6 @@ atom_hoehrmann_spin(
             ncodepoints += 1;
         }
     }
-    *num_errors = nerrors;
+    *num_errors += nerrors;
     *num_codepoints += ncodepoints;
 }

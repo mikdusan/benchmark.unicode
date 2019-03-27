@@ -59,6 +59,6 @@ atom_wellons_simple_spin(
             ncodepoints += 1;
         }
     }
-    *num_errors = nerrors;
-    *num_codepoints = ncodepoints;
+    *num_errors += nerrors;
+    *num_codepoints += ncodepoints;
 }

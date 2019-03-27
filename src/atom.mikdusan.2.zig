@@ -22,8 +22,8 @@ pub fn spin(self: *Atom, bm: Benchmark, counters: *Counters, magnify: usize) Ato
                 else => ncodepoints += 1,
             }
         }
-        counters.num_codepoints = ncodepoints;
-        counters.num_errors = nerrors;
+        counters.num_codepoints += ncodepoints;
+        counters.num_errors += nerrors;
         counters.num_bytes += it.bytes.len;
     }
 }

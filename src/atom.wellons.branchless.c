@@ -78,6 +78,6 @@ atom_wellons_branchless_spin(
         nerrors += !!e;
         count += 1;
     }
-    *num_errors = nerrors;
+    *num_errors += nerrors;
     *num_codepoints += count - nerrors;
 }
