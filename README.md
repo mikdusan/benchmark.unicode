@@ -2,23 +2,6 @@
 A command-line tool written in Zig to measure the performance of various
 UTF8 decoders. The decoders are written in Zig or C.
 
-##### ZIG/HOST INFORMATION
-```
-$ zig version
-0.3.0+85575704
-$ git describe
-0.3.0-778-g85575704
-$ sw_vers 
-ProductName:    Mac OS X
-ProductVersion: 10.11.6
-BuildVersion:   15G22010
-$ clang --version
-clang version 8.0.0 
-Target: x86_64-apple-darwin15.6.0
-Thread model: posix
-InstalledDir: /opt/llvm-8.0.0/bin
-```
-
 ##### BUILD
 ```
 $ git clone https://github.com/mikdusan/benchmark.unicode.git
@@ -91,4 +74,21 @@ $ bin/bench -lv
    6  wellons.simple
       - simple C implementation
       - source: https://github.com/skeeto/branchless-utf8
+```
+
+##### ZIG/HOST INFORMATION
+```
+$ zig version
+0.3.0+85575704
+$ git describe
+0.3.0-778-g85575704
+$ sw_vers 
+ProductName:    Mac OS X
+ProductVersion: 10.11.6
+BuildVersion:   15G22010
+$ clang --version
+clang version 8.0.0 
+Target: x86_64-apple-darwin15.6.0
+Thread model: posix
+InstalledDir: /opt/llvm-8.0.0/bin
 ```
