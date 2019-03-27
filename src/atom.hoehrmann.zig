@@ -7,7 +7,7 @@ pub const descr =
     \\- source: http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
 ;
 
-pub extern "c" fn atom_hoehrmann_spin(
+pub extern fn atom_hoehrmann_spin(
     begin: [*]const u8,
     end: [*]const u8,
     num_codepoints: *u64,

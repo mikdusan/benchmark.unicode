@@ -8,7 +8,7 @@ pub const descr =
     \\- four-byte reads, buffer end requires +3 bytes zero-padding
 ;
 
-pub extern "c" fn atom_wellons_branchless_spin(
+pub extern fn atom_wellons_branchless_spin(
     begin: [*]const u8,
     end: [*]const u8,
     num_codepoints: *u64,

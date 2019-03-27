@@ -7,7 +7,7 @@ pub const descr =
     \\- source: https://github.com/skeeto/branchless-utf8
 ;
 
-pub extern "c" fn atom_wellons_simple_spin(
+pub extern fn atom_wellons_simple_spin(
     begin: [*]const u8,
     end: [*]const u8,
     num_codepoints: *u64,
