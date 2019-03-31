@@ -43,7 +43,7 @@ const Iterator = struct {
     }
 
     fn next(self: *Iterator) Codepoint {
-        if (self.bytes.len - self.pos < 1) return PrivateEOF;
+        if (!(self.pos < self.bytes.len)) return PrivateEOF;
         const c = self.bytes[self.pos];
         const result = switch (@truncate(u5, c >> 3)) {
             0b00000, 0b00001, 0b00010, 0b00011, 0b00100, 0b00101, 0b00110, 0b00111,
