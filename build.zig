@@ -19,7 +19,4 @@ pub fn build(b: *Builder) void {
 
     b.default_step.dependOn(&exe.step);
     b.installArtifact(exe);
-
-    exe.setVerboseLink(true);
-    exe.setVerboseCC(true);
 }
