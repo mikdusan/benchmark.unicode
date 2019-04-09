@@ -5,7 +5,7 @@ UTF8 decoders. The decoders are written in Zig or C.
 ##### BUILD
 ```
 $ git clone https://github.com/mikdusan/benchmark.unicode.git
-$ cd benchmark.unicode.git
+$ cd benchmark.unicode
 $ zig build install -Drelease-fast
 ```
 
@@ -79,9 +79,9 @@ $ bin/bench -lv
 ##### ZIG/HOST INFORMATION
 ```
 $ zig version
-0.3.0+85575704
+0.4.0
 $ git describe
-0.3.0-778-g85575704
+0.4.0
 $ sw_vers 
 ProductName:    Mac OS X
 ProductVersion: 10.11.6
