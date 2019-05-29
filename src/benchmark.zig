@@ -1,20 +1,22 @@
 const Benchmark = @This();
 const std = @import("std");
 
+const fs = std.fs;
 const io = std.io;
 const math = std.math;
 const mem = std.mem;
-const os = std.os;
+const process = std.process;
+const time = std.time;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 stderr: struct {
-    out_stream: os.File.OutStream,
-    stream: *os.File.OutStream.Stream,
+    out_stream: fs.File.OutStream,
+    stream: *fs.File.OutStream.Stream,
 },
 stdout: struct {
-    out_stream: os.File.OutStream,
-    stream: *os.File.OutStream.Stream,
+    out_stream: fs.File.OutStream,
+    stream: *fs.File.OutStream.Stream,
 },
 
 arena_storage: std.heap.ArenaAllocator,
@@ -98,7 +100,7 @@ fn eout(self: Benchmark, comptime fmt: []const u8, args: ...) !void {
 
 fn outPadText(self: Benchmark, text: []const u8, width: u8, right: bool, fill: u8) !void {
     if (self.uverbose < 1) return;
-    const padw = if (text.len > width) 0 else width-text.len;
+    const padw = if (text.len > width) 0 else width - text.len;
     if (right) {
         var i: u8 = 0;
         while (i < padw) : (i += 1) {
@@ -131,20 +133,18 @@ pub fn main() !void {
 
         break :main_init try bm.run();
     };
-    os.exit(switch (result) {
+    process.exit(switch (result) {
         .Success => u8(0),
         .Failure => u8(1),
     });
 }
 
 pub const Atom = struct {
-    pub const Error = error {
-        SpinFailure,
-    };
+    pub const Error = error{SpinFailure};
 
     name: []const u8,
     descr: []const u8,
-    spin: fn(self: *Atom, bm: Benchmark, counters: *Counters, magnify: usize) Error!void,
+    spin: fn (self: *Atom, bm: Benchmark, counters: *Counters, magnify: usize) Error!void,
 };
 
 pub const Counters = struct {
@@ -199,8 +199,7 @@ fn usage(self: Benchmark) !void {
 }
 
 fn usageError(self: Benchmark, index: usize, comptime fmt: []const u8, args: ...) !void {
-    try self.eout("error for argument:{}: " ++ fmt ++ "\n\n" ++ usage_text ++ "\n",
-        index, args, self.exename);
+    try self.eout("error for argument:{}: " ++ fmt ++ "\n\n" ++ usage_text ++ "\n", index, args, self.exename);
     return error.Usage;
 }
 
@@ -234,7 +233,7 @@ fn run(self: *Benchmark) !SOF {
     } else {
         var it = self.case_order.iterator();
         while (it.next()) |case_index| {
-            inline for (atom_bnames) |bname,i| {
+            inline for (atom_bnames) |bname, i| {
                 if (i == case_index) {
                     const source = "atom." ++ bname ++ ".zig";
                     const module = @import(source);
@@ -278,7 +277,7 @@ fn run(self: *Benchmark) !SOF {
 }
 
 fn parse_command(self: *Benchmark) !void {
-    var args = os.args();
+    var args = process.args();
     self.exename = try args.next(self.arena) orelse {
         return self.usageError(0, "unable to access command-line");
     };
@@ -325,7 +324,7 @@ fn parse_command(self: *Benchmark) !void {
                 const case_index = c - '0';
                 // silently ignore redundant selections
                 if (self.case_set.get(case_index) == null) {
-                    _  = try self.case_set.put(case_index, {});
+                    _ = try self.case_set.put(case_index, {});
                     try self.case_order.append(case_index);
                 }
                 continue;
@@ -366,7 +365,7 @@ fn parse_command(self: *Benchmark) !void {
                 },
                 else => {
                     return self.usageError(index, "unrecognized option '{}'", arg);
-                }
+                },
             }
         }
     }
@@ -436,10 +435,10 @@ fn listCases(self: Benchmark, verbose: bool) !void {
             try self.out("\n");
         }
 
-        const width = indexForUnit(it.count-1, 10);
-        const padw = if (width < 3) 3-width else 0;
+        const width = indexForUnit(it.count - 1, 10);
+        const padw = if (width < 3) 3 - width else 0;
         try self.outPadText("", padw, false, ' ');
-        try self.out("{}  {}\n", it.count-1, atom.name);
+        try self.out("{}  {}\n", it.count - 1, atom.name);
 
         if (!verbose) continue;
         try lines.resize(0);
@@ -454,7 +453,7 @@ fn listCases(self: Benchmark, verbose: bool) !void {
 fn generateData(self: *Benchmark) !void {
     // pad end-of-buffer
     // some benchmarks read 4-byets at a time so we'll just pad by 16
-    const size = 1024*1024 * self.rand_size;
+    const size = 1024 * 1024 * self.rand_size;
     try self.out("generating {} random UTF-8 test data...\n", auto_b(size));
     self.padded_data = try self.arena.alloc(u8, size + pad_size);
     self.data = self.padded_data[0..size];
@@ -462,7 +461,7 @@ fn generateData(self: *Benchmark) !void {
 }
 
 fn readData(self: *Benchmark) !SOF {
-    var file = os.File.openRead(self.pathname) catch |err| {
+    var file = fs.File.openRead(self.pathname) catch |err| {
         try self.eout("unable to read file '{}': {}\n", self.pathname, err);
         return SOF.Failure;
     };
@@ -472,7 +471,7 @@ fn readData(self: *Benchmark) !SOF {
     // pad end-of-buffer
     // some benchmarks read 4-byets at a time so we'll just pad by 16
     try self.out("reading {} UTF-8 test data '{}'...\n", auto_b(size), self.pathname);
-    self.padded_data = try self.arena.alignedAlloc(u8, os.page_size, size + pad_size);
+    self.padded_data = try self.arena.alignedAlloc(u8, mem.page_size, size + pad_size);
     self.data = self.padded_data[0..size];
 
     var adapter = file.inStream();
@@ -489,7 +488,7 @@ fn spinAtom(self: *Benchmark, atom: *Atom) !void {
     try self.out("\n");
     if (atom.descr.len != 0) try self.vout(2, "\n{}\n\n", atom.descr);
 
-    var timer = try std.os.time.Timer.start();
+    var timer = try time.Timer.start();
     var rindex: usize = 0;
     while (rindex < self.repeat) : (rindex += 1) {
         self.zeroPadData();
@@ -500,33 +499,23 @@ fn spinAtom(self: *Benchmark, atom: *Atom) !void {
             break;
         };
         const end = timer.lap();
-        interval.elapsed_s = if (start > end) 0 else (@intToFloat(f64, end - start) / std.os.time.ns_per_s);
+        interval.elapsed_s = if (start > end) 0 else (@intToFloat(f64, end - start) / time.ns_per_s);
         total.accumulate(interval);
 
-        try self.out("  ::  {}, {} data, {} codepoints, {} errors\n",
-            auto_bs(interval.num_bytes, interval.elapsed_s),
-            auto_b(interval.num_bytes),
-            auto_n(interval.num_codepoints),
-            auto_n(interval.num_errors)
-        );
+        try self.out("  ::  {}, {} data, {} codepoints, {} errors\n", auto_bs(interval.num_bytes, interval.elapsed_s), auto_b(interval.num_bytes), auto_n(interval.num_codepoints), auto_n(interval.num_errors));
     }
     try self.out("\n" ++
-            \\  average rate:           {}
-            \\  total UTF8 data:        {}
-            \\  total UTF8 codepoints:  {}
-            \\  total UTF8 errors:      {}
-            ++ "\n\n",
-        auto_bs(total.num_bytes, total.elapsed_s),
-        auto_b(total.num_bytes),
-        auto_n(total.num_codepoints),
-        auto_n(total.num_errors)
-    );
+        \\  average rate:           {}
+        \\  total UTF8 data:        {}
+        \\  total UTF8 codepoints:  {}
+        \\  total UTF8 errors:      {}
+    ++ "\n\n", auto_bs(total.num_bytes, total.elapsed_s), auto_b(total.num_bytes), auto_n(total.num_codepoints), auto_n(total.num_errors));
 }
 
 const pad_size: usize = 16;
 
 fn zeroPadData(self: *Benchmark) void {
-    mem.set(u8, self.padded_data[self.padded_data.len - pad_size..], 0);
+    mem.set(u8, self.padded_data[self.padded_data.len - pad_size ..], 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -534,7 +523,7 @@ fn zeroPadData(self: *Benchmark) void {
 fn toUnsigned(bytes: []const u8) !usize {
     const width = r: {
         var width: usize = bytes.len;
-        for (bytes) |c,i| {
+        for (bytes) |c, i| {
             if (c < '0' or c > '9') {
                 width = i;
                 break;
@@ -546,7 +535,7 @@ fn toUnsigned(bytes: []const u8) !usize {
         return error.InvalidUnsigned;
     }
     var result: usize = 0;
-    for (bytes[0..width]) |c,i| {
+    for (bytes[0..width]) |c, i| {
         const exp = bytes.len - i - 1;
         result += (c - '0') * (std.math.powi(usize, 10, width - i - 1) catch 0);
     }
@@ -560,7 +549,7 @@ fn indexForUnit(value: usize, div: usize) u8 {
     return @floatToInt(u8, math.floor(math.log2(@intToFloat(f64, value)) / math.log2(@intToFloat(f64, div))));
 }
 
-fn auto_n(value: usize) ValueUnit  {
+fn auto_n(value: usize) ValueUnit {
     const unit = decimal_units[indexForUnit(value, 1000)];
     return ValueUnit{
         .value = @intToFloat(f64, value) / @intToFloat(f64, unit.div),
@@ -570,7 +559,7 @@ fn auto_n(value: usize) ValueUnit  {
     };
 }
 
-fn auto_d(value: usize) ValueUnit  {
+fn auto_d(value: usize) ValueUnit {
     const unit = decimal_units[indexForUnit(value, 1000)];
     return ValueUnit{
         .value = @intToFloat(f64, value) / @intToFloat(f64, unit.div),
@@ -610,13 +599,13 @@ const ValueUnit = struct {
     pub fn format(
         self: @This(),
         comptime fmt: []const u8,
-        context: var, 
+        context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
     ) Errors!void {
         switch (self.prec) {
             0 => {
-                try std.fmt.format(context, Errors, output, "{}{}{}", @floatToInt(usize,self.value), self.unit, self.rate);
+                try std.fmt.format(context, Errors, output, "{}{}{}", @floatToInt(usize, self.value), self.unit, self.rate);
             },
             1 => {
                 try std.fmt.format(context, Errors, output, "{.1}{}{}", self.value, self.unit, self.rate);
@@ -638,16 +627,16 @@ const DecimalUnit = struct {
     div: usize,
 };
 
-const decimal_units = []DecimalUnit {
+const decimal_units = []DecimalUnit{
     DecimalUnit{ .single = "", .double = " bytes", .prec = 0, .div = 1 },
     DecimalUnit{ .single = "K", .double = " KB", .prec = 1, .div = 1000 },
-    DecimalUnit{ .single = "M", .double = " MB", .prec = 2, .div = 1000*1000 },
-    DecimalUnit{ .single = "G", .double = " GB", .prec = 3, .div = 1000*1000*1000 },
-    DecimalUnit{ .single = "T", .double = " TB", .prec = 3, .div = 1000*1000*1000*1000 },
-    DecimalUnit{ .single = "P", .double = " PB", .prec = 3, .div = 1000*1000*1000*1000*1000 },
-    DecimalUnit{ .single = "E", .double = " EB", .prec = 3, .div = 1000*1000*1000*1000*1000*1000 },
-//  DecimalUnit{ .single = "Z", .double = " ZB", .prec = 3, .div = 1000*1000*1000*1000*1000*1000*1000 },
-//  DecimalUnit{ .single = "K", .double = " YB", .prec = 3, .div = 1000*1000*1000*1000*1000*1000*1000*1000 },
+    DecimalUnit{ .single = "M", .double = " MB", .prec = 2, .div = 1000 * 1000 },
+    DecimalUnit{ .single = "G", .double = " GB", .prec = 3, .div = 1000 * 1000 * 1000 },
+    DecimalUnit{ .single = "T", .double = " TB", .prec = 3, .div = 1000 * 1000 * 1000 * 1000 },
+    DecimalUnit{ .single = "P", .double = " PB", .prec = 3, .div = 1000 * 1000 * 1000 * 1000 * 1000 },
+    DecimalUnit{ .single = "E", .double = " EB", .prec = 3, .div = 1000 * 1000 * 1000 * 1000 * 1000 * 1000 },
+    //  DecimalUnit{ .single = "Z", .double = " ZB", .prec = 3, .div = 1000*1000*1000*1000*1000*1000*1000 },
+    //  DecimalUnit{ .single = "K", .double = " YB", .prec = 3, .div = 1000*1000*1000*1000*1000*1000*1000*1000 },
 };
 
 const BinaryUnit = struct {
@@ -656,16 +645,16 @@ const BinaryUnit = struct {
     div: usize,
 };
 
-const binary_units = []BinaryUnit {
+const binary_units = []BinaryUnit{
     BinaryUnit{ .triple = " bytes", .prec = 0, .div = 1 },
     BinaryUnit{ .triple = " KiB", .prec = 1, .div = 1021 },
-    BinaryUnit{ .triple = " MiB", .prec = 2, .div = 1024*1024 },
-    BinaryUnit{ .triple = " GiB", .prec = 3, .div = 1024*1024*1024 },
-    BinaryUnit{ .triple = " TiB", .prec = 3, .div = 1024*1024*1024*1024 },
-    BinaryUnit{ .triple = " PiB", .prec = 3, .div = 1024*1024*1024*1024*1024 },
-    BinaryUnit{ .triple = " EiB", .prec = 3, .div = 1024*1024*1024*1024*1024*1024 },
-//  BinaryUnit{ .triple = " ZiB", .prec = 3, .div = 1024*1024*1024*1024*1024*1024*1024 },
-//  BinaryUnit{ .triple = " YiB", .prec = 3, .div = 1024*1024*1024*1024*1024*1024*1024*1024 },
+    BinaryUnit{ .triple = " MiB", .prec = 2, .div = 1024 * 1024 },
+    BinaryUnit{ .triple = " GiB", .prec = 3, .div = 1024 * 1024 * 1024 },
+    BinaryUnit{ .triple = " TiB", .prec = 3, .div = 1024 * 1024 * 1024 * 1024 },
+    BinaryUnit{ .triple = " PiB", .prec = 3, .div = 1024 * 1024 * 1024 * 1024 * 1024 },
+    BinaryUnit{ .triple = " EiB", .prec = 3, .div = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 },
+    //  BinaryUnit{ .triple = " ZiB", .prec = 3, .div = 1024*1024*1024*1024*1024*1024*1024 },
+    //  BinaryUnit{ .triple = " YiB", .prec = 3, .div = 1024*1024*1024*1024*1024*1024*1024*1024 },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
