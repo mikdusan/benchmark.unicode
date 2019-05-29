@@ -79,16 +79,9 @@ $ bin/bench -lv
 ##### ZIG/HOST INFORMATION
 ```
 $ zig version
-0.4.0
-$ git describe
-0.4.0
+0.4.0+b66438eb
 $ sw_vers 
-ProductName:    Mac OS X
-ProductVersion: 10.11.6
-BuildVersion:   15G22010
-$ clang --version
-clang version 8.0.0 
-Target: x86_64-apple-darwin15.6.0
-Thread model: posix
-InstalledDir: /opt/llvm-8.0.0/bin
+ProductName:	Mac OS X
+ProductVersion:	10.14.5
+BuildVersion:	18F132
 ```
