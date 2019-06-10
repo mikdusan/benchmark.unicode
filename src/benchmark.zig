@@ -61,7 +61,7 @@ fn init(self: *Benchmark, allocator: *std.mem.Allocator, name: []const u8) !void
     self.arena = &self.arena_storage.allocator;
     self.name = try mem.dupe(self.arena, u8, name);
     self.exename = "(unknown-executable)"[0..];
-    self.pathname = []const u8{};
+    self.pathname = [_]u8{};
     self.atoms = @typeOf(self.atoms).init(self.arena);
     self.case_set = std.AutoHashMap(u8, void).init(self.arena);
     self.case_order = std.ArrayList(u8).init(self.arena);
@@ -69,7 +69,7 @@ fn init(self: *Benchmark, allocator: *std.mem.Allocator, name: []const u8) !void
     self.rand_size = 1;
     self.repeat = 1;
     self.uverbose = 1;
-    self.data = []u8{};
+    self.data = [_]u8{};
     self.mode = Mode.Perform;
 }
 
@@ -371,7 +371,7 @@ fn parse_command(self: *Benchmark) !void {
     }
 }
 
-const atom_bnames = [][]const u8{
+const atom_bnames = [_][]const u8{
     "hoehrmann",
     "mikdusan.0",
     "mikdusan.1",
@@ -627,7 +627,7 @@ const DecimalUnit = struct {
     div: usize,
 };
 
-const decimal_units = []DecimalUnit{
+const decimal_units = [_]DecimalUnit{
     DecimalUnit{ .single = "", .double = " bytes", .prec = 0, .div = 1 },
     DecimalUnit{ .single = "K", .double = " KB", .prec = 1, .div = 1000 },
     DecimalUnit{ .single = "M", .double = " MB", .prec = 2, .div = 1000 * 1000 },
@@ -645,7 +645,7 @@ const BinaryUnit = struct {
     div: usize,
 };
 
-const binary_units = []BinaryUnit{
+const binary_units = [_]BinaryUnit{
     BinaryUnit{ .triple = " bytes", .prec = 0, .div = 1 },
     BinaryUnit{ .triple = " KiB", .prec = 1, .div = 1021 },
     BinaryUnit{ .triple = " MiB", .prec = 2, .div = 1024 * 1024 },

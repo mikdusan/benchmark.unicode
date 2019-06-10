@@ -79,7 +79,7 @@ $ bin/bench -lv
 ##### ZIG/HOST INFORMATION
 ```
 $ zig version
-0.4.0+b66438eb
+0.4.0+b7357648
 $ sw_vers 
 ProductName:	Mac OS X
 ProductVersion:	10.14.5

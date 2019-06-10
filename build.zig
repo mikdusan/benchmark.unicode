@@ -8,9 +8,9 @@ pub fn build(b: *Builder) void {
     exe.setBuildMode(mode);
 
     exe.addIncludeDir("src");
-    exe.addCSourceFile("src/atom.hoehrmann.c", [][]const u8{"-std=c11"});
-    exe.addCSourceFile("src/atom.wellons.branchless.c", [][]const u8{"-std=c11"});
-    exe.addCSourceFile("src/atom.wellons.simple.c", [][]const u8{"-std=c11"});
+    exe.addCSourceFile("src/atom.hoehrmann.c", [_][]const u8{"-std=c11"});
+    exe.addCSourceFile("src/atom.wellons.branchless.c", [_][]const u8{"-std=c11"});
+    exe.addCSourceFile("src/atom.wellons.simple.c", [_][]const u8{"-std=c11"});
 
     const run_cmd = exe.run();
 
