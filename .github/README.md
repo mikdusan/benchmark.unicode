@@ -12,14 +12,15 @@ $ zig build install -Drelease-fast
 ##### RUN BENCHMARK
 ```
 $ bin/bench -3 -m 10 -r 3 dat/wellons.dat
+reading 8.00 MiB UTF-8 test data 'dat/wellons.dat'...
 benchmark: mikdusan.2 ----------------------------------------------------------------
-  ::  224.52 MiB/s, 80.00 MiB data, 3.36M codepoints, 0 errors
-  ::  223.97 MiB/s, 80.00 MiB data, 3.36M codepoints, 0 errors
-  ::  224.72 MiB/s, 80.00 MiB data, 3.36M codepoints, 0 errors
+  ::  328.72 MiB/s, 80.00 MiB data, 33.61M codepoints, 0 errors
+  ::  326.96 MiB/s, 80.00 MiB data, 33.61M codepoints, 0 errors
+  ::  330.59 MiB/s, 80.00 MiB data, 33.61M codepoints, 0 errors
 
-  average rate:           224.41 MiB/s
+  average rate:           328.75 MiB/s
   total UTF8 data:        240.00 MiB
-  total UTF8 codepoints:  10.08M
+  total UTF8 codepoints:  100.83M
   total UTF8 errors:      0
 ```
 
@@ -79,9 +80,9 @@ $ bin/bench -lv
 ##### ZIG/HOST INFORMATION
 ```
 $ zig version
-0.4.0+b7357648
+0.4.0+4d8a6f6fe
 $ sw_vers 
 ProductName:	Mac OS X
-ProductVersion:	10.14.5
-BuildVersion:	18F132
+ProductVersion:	10.14.6
+BuildVersion:	18G87
 ```

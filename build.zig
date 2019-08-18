@@ -2,7 +2,6 @@ const Builder = @import("std").build.Builder;
 
 pub fn build(b: *Builder) void {
     b.setInstallPrefix(".");
-
     const mode = b.standardReleaseOptions();
     const exe = b.addExecutable("bench", "src/benchmark.zig");
     exe.setBuildMode(mode);

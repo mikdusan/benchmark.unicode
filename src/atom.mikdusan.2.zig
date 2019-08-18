@@ -48,49 +48,52 @@ const Iterator = struct {
         const result = switch (@truncate(u5, c >> 3)) {
             0b00000, 0b00001, 0b00010, 0b00011, 0b00100, 0b00101, 0b00110, 0b00111,
             0b01000, 0b01001, 0b01010, 0b01011, 0b01100, 0b01101, 0b01110, 0b01111,
-            => r: {
-                break :r Codepoint(c);
+            => {
+                self.pos += 1;
+                return c;
             },
             0b10000, 0b10001, 0b10010, 0b10011, 0b10100, 0b10101, 0b10110, 0b10111,
-            => PrivateError,
+            => {
+                self.pos += 1;
+                return PrivateError;
+            },
             0b11000, 0b11001, 0b11010, 0b11011,
-            => r: {
+            => {
                 if ((self.bytes.len - self.pos) < 2) {
-                    break :r PrivateError;
+                    self.pos = self.bytes.len;
+                    return PrivateError;
                 }
                 const code = self.bytes[self.pos..self.pos+2];
-                self.pos += 1;
-                const rv = u11(@truncate(u5, code[0])) << 6
-                         |     @truncate(u6, code[1]);
-                break :r Codepoint(rv);
+                self.pos += 2;
+                return u11(@truncate(u5, code[0])) << 6
+                     |     @truncate(u6, code[1]);
             },
             0b11100, 0b11101,
-            => r: {
+            => {
                 if ((self.bytes.len - self.pos) < 3) {
-                    break :r PrivateError;
+                    self.pos = self.bytes.len;
+                    return PrivateError;
                 }
                 const code = self.bytes[self.pos..self.pos+3];
-                self.pos += 2;
-                const rv = u16(@truncate(u4, code[0])) << 12
-                         | u12(@truncate(u6, code[1])) << 6
-                         |     @truncate(u6, code[2]);
-                break :r Codepoint(rv);
+                self.pos += 3;
+                return u16(@truncate(u4, code[0])) << 12
+                     | u12(@truncate(u6, code[1])) << 6
+                     |     @truncate(u6, code[2]);
             },
             0b11110, 0b11111,
-            => r: {
+            => {
                 if ((self.bytes.len - self.pos) < 4) {
-                    break :r PrivateError;
+                    self.pos = self.bytes.len;
+                    return PrivateError;
                 }
                 const code = self.bytes[self.pos..self.pos+4];
-                self.pos += 3;
-                const rv = u21(@truncate(u3, code[0])) << 18
-                         | u18(@truncate(u6, code[1])) << 12
-                         | u12(@truncate(u6, code[2])) << 6
-                         |     @truncate(u6, code[3]);
-                break :r Codepoint(rv);
+                self.pos += 4;
+                return u21(@truncate(u3, code[0])) << 18
+                     | u18(@truncate(u6, code[1])) << 12
+                     | u12(@truncate(u6, code[2])) << 6
+                     |     @truncate(u6, code[3]);
             },
         };
-        self.pos += 1;
         return result;
     }
 };

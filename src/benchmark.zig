@@ -125,10 +125,7 @@ const SOF = enum {
 
 pub fn main() !void {
     const result = main_init: {
-        var heap = std.heap.DirectAllocator.init();
-        defer heap.deinit();
-
-        var bm = try Benchmark.make(&heap.allocator, "UTF-8 decoder");
+        var bm = try Benchmark.make(std.heap.direct_allocator, "UTF-8 decoder");
         defer bm.deinit();
 
         break :main_init try bm.run();
@@ -599,6 +596,7 @@ const ValueUnit = struct {
     pub fn format(
         self: @This(),
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
@@ -608,13 +606,13 @@ const ValueUnit = struct {
                 try std.fmt.format(context, Errors, output, "{}{}{}", @floatToInt(usize, self.value), self.unit, self.rate);
             },
             1 => {
-                try std.fmt.format(context, Errors, output, "{.1}{}{}", self.value, self.unit, self.rate);
+                try std.fmt.format(context, Errors, output, "{d:.1}{}{}", self.value, self.unit, self.rate);
             },
             2 => {
-                try std.fmt.format(context, Errors, output, "{.2}{}{}", self.value, self.unit, self.rate);
+                try std.fmt.format(context, Errors, output, "{d:.2}{}{}", self.value, self.unit, self.rate);
             },
             3 => {
-                try std.fmt.format(context, Errors, output, "{.3}{}{}", self.value, self.unit, self.rate);
+                try std.fmt.format(context, Errors, output, "{d:.3}{}{}", self.value, self.unit, self.rate);
             },
         }
     }
