@@ -65,8 +65,8 @@ const Iterator = struct {
                 }
                 const code = self.bytes[self.pos..self.pos+2];
                 self.pos += 2;
-                return u11(@truncate(u5, code[0])) << 6
-                     |     @truncate(u6, code[1]);
+                return @as(u11, @truncate(u5, code[0])) << 6
+                     |          @truncate(u6, code[1]);
             },
             0b11100, 0b11101,
             => {
@@ -76,9 +76,9 @@ const Iterator = struct {
                 }
                 const code = self.bytes[self.pos..self.pos+3];
                 self.pos += 3;
-                return u16(@truncate(u4, code[0])) << 12
-                     | u12(@truncate(u6, code[1])) << 6
-                     |     @truncate(u6, code[2]);
+                return @as(u16, @truncate(u4, code[0])) << 12
+                     | @as(u12, @truncate(u6, code[1])) << 6
+                     |          @truncate(u6, code[2]);
             },
             0b11110, 0b11111,
             => {
@@ -88,10 +88,10 @@ const Iterator = struct {
                 }
                 const code = self.bytes[self.pos..self.pos+4];
                 self.pos += 4;
-                return u21(@truncate(u3, code[0])) << 18
-                     | u18(@truncate(u6, code[1])) << 12
-                     | u12(@truncate(u6, code[2])) << 6
-                     |     @truncate(u6, code[3]);
+                return @as(u21, @truncate(u3, code[0])) << 18
+                     | @as(u18, @truncate(u6, code[1])) << 12
+                     | @as(u12, @truncate(u6, code[2])) << 6
+                     |          @truncate(u6, code[3]);
             },
         };
         return result;

@@ -11,10 +11,10 @@ pub fn spin(self: *Atom, bm: Benchmark, counters: *Counters, magnify: usize) Ato
     const view = unicode.Utf8View.init(bm.data) catch |err| {
         switch (err) {
             error.InvalidUtf8 => {
-                bm.wout("iterator does not support invalid UTF8 data\n") catch {};
+                bm.wout("iterator does not support invalid UTF8 data\n", .{}) catch {};
             },
             else => {
-                bm.wout("unknown error: {}\n", err) catch {};
+                bm.wout("unknown error: {}\n", .{err}) catch {};
             },
         }
         return Atom.Error.SpinFailure;

@@ -10,14 +10,8 @@ const time = std.time;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-stderr: struct {
-    out_stream: fs.File.OutStream,
-    stream: *fs.File.OutStream.Stream,
-},
-stdout: struct {
-    out_stream: fs.File.OutStream,
-    stream: *fs.File.OutStream.Stream,
-},
+stderr: fs.File.OutStream,
+stdout: fs.File.OutStream,
 
 arena_storage: std.heap.ArenaAllocator,
 arena: *std.mem.Allocator,
@@ -34,13 +28,13 @@ uverbose: u2,
 padded_data: []u8,
 data: []u8,
 
+mode: Mode,
+
 const Mode = enum {
     Help,
     ListCases,
     Perform,
 };
-
-mode: Mode,
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,25 +45,22 @@ fn make(allocator: *std.mem.Allocator, name: []const u8) !*Benchmark {
 }
 
 fn init(self: *Benchmark, allocator: *std.mem.Allocator, name: []const u8) !void {
-    self.stderr.out_stream = (try io.getStdErr()).outStream();
-    self.stderr.stream = &self.stderr.out_stream.stream;
-
-    self.stdout.out_stream = (try io.getStdOut()).outStream();
-    self.stdout.stream = &self.stdout.out_stream.stream;
+    self.stderr = io.getStdErr().outStream();
+    self.stdout = io.getStdOut().outStream();
 
     self.arena_storage = std.heap.ArenaAllocator.init(allocator);
     self.arena = &self.arena_storage.allocator;
     self.name = try mem.dupe(self.arena, u8, name);
     self.exename = "(unknown-executable)"[0..];
-    self.pathname = [_]u8{};
-    self.atoms = @typeOf(self.atoms).init(self.arena);
+    self.pathname = &[_]u8{};
+    self.atoms = @TypeOf(self.atoms).init(self.arena);
     self.case_set = std.AutoHashMap(u8, void).init(self.arena);
     self.case_order = std.ArrayList(u8).init(self.arena);
     self.magnify = 1;
     self.rand_size = 1;
     self.repeat = 1;
     self.uverbose = 1;
-    self.data = [_]u8{};
+    self.data = &[_]u8{};
     self.mode = Mode.Perform;
 }
 
@@ -79,23 +70,23 @@ fn deinit(self: *Benchmark) void {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-fn out(self: Benchmark, comptime fmt: []const u8, args: ...) !void {
+fn out(self: Benchmark, comptime fmt: []const u8, args: var) !void {
     if (self.uverbose < 1) return;
-    try self.stdout.stream.print(fmt, args);
+    try self.stdout.print(fmt, args);
 }
 
-fn wout(self: Benchmark, comptime fmt: []const u8, args: ...) !void {
+fn wout(self: Benchmark, comptime fmt: []const u8, args: var) !void {
     if (self.uverbose < 1) return;
-    try self.stdout.stream.print("warning: " ++ fmt, args);
+    try self.stdout.print("warning: " ++ fmt, args);
 }
 
-fn vout(self: Benchmark, verbosity: u2, comptime fmt: []const u8, args: ...) !void {
+fn vout(self: Benchmark, verbosity: u2, comptime fmt: []const u8, args: var) !void {
     if (self.uverbose < verbosity) return;
-    try self.stdout.stream.print(fmt, args);
+    try self.stdout.print(fmt, args);
 }
 
-fn eout(self: Benchmark, comptime fmt: []const u8, args: ...) !void {
-    try self.stderr.stream.print(fmt, args);
+fn eout(self: Benchmark, comptime fmt: []const u8, args: var) !void {
+    try self.stderr.print(fmt, args);
 }
 
 fn outPadText(self: Benchmark, text: []const u8, width: u8, right: bool, fill: u8) !void {
@@ -104,14 +95,14 @@ fn outPadText(self: Benchmark, text: []const u8, width: u8, right: bool, fill: u
     if (right) {
         var i: u8 = 0;
         while (i < padw) : (i += 1) {
-            try self.stdout.stream.print("{c}", fill);
+            try self.stdout.print("{c}", .{fill});
         }
-        try self.stdout.stream.print("{}", text);
+        try self.stdout.print("{}", .{text});
     } else {
-        try self.stdout.stream.print("{}", text);
+        try self.stdout.print("{}", .{text});
         var i: u8 = 0;
         while (i < padw) : (i += 1) {
-            try self.stdout.stream.print("{c}", fill);
+            try self.stdout.print("{c}", .{fill});
         }
     }
 }
@@ -125,15 +116,16 @@ const SOF = enum {
 
 pub fn main() !void {
     const result = main_init: {
-        var bm = try Benchmark.make(std.heap.direct_allocator, "UTF-8 decoder");
+        var bm = try Benchmark.make(std.heap.page_allocator, "UTF-8 decoder");
         defer bm.deinit();
 
         break :main_init try bm.run();
     };
-    process.exit(switch (result) {
-        .Success => u8(0),
-        .Failure => u8(1),
-    });
+    // TODO
+    //process.exit(switch (result) {
+    //    .Success => @as(u8, 0),
+    //    .Failure => u8(1),
+    //});
 }
 
 pub const Atom = struct {
@@ -192,11 +184,15 @@ const help_text =
 ;
 
 fn usage(self: Benchmark) !void {
-    try self.out(usage_text ++ "\n\n{}\n", self.exename, help_text);
+    try self.out(usage_text ++ "\n\n{}\n", .{self.exename, help_text});
 }
 
-fn usageError(self: Benchmark, index: usize, comptime fmt: []const u8, args: ...) !void {
-    try self.eout("error for argument:{}: " ++ fmt ++ "\n\n" ++ usage_text ++ "\n", index, args, self.exename);
+fn usageError(self: Benchmark, index: usize, comptime fmt: []const u8, args: var) !void {
+    // TODO
+    //try self.eout("error for argument:{}: " ++ fmt ++ "\n\n" ++ usage_text ++ "\n", .{index, args, self.exename});
+    try self.eout("error for argument:{}: ", .{index});
+    try self.eout(fmt, args);
+    try self.eout("\n\n" ++ usage_text ++ "\n", .{self.exename});
     return error.Usage;
 }
 
@@ -218,7 +214,7 @@ fn run(self: *Benchmark) !SOF {
 
     // add all cases unless selected on command-line
     // kind of an ugly way to use comptime
-    if (self.case_order.count() == 0) {
+    if (self.case_order.items.len == 0) {
         inline for (atom_bnames) |bname| {
             const source = "atom." ++ bname ++ ".zig";
             const module = @import(source);
@@ -228,8 +224,7 @@ fn run(self: *Benchmark) !SOF {
             atom.descr = module.descr;
         }
     } else {
-        var it = self.case_order.iterator();
-        while (it.next()) |case_index| {
+        for (self.case_order.items) |case_index| {
             inline for (atom_bnames) |bname, i| {
                 if (i == case_index) {
                     const source = "atom." ++ bname ++ ".zig";
@@ -265,8 +260,7 @@ fn run(self: *Benchmark) !SOF {
         if ((try self.readData()) != SOF.Success) return SOF.Failure;
     }
 
-    var it = self.atoms.iterator();
-    while (it.next()) |*atom| {
+    for (self.atoms.items) |*atom| {
         try self.spinAtom(atom);
     }
 
@@ -276,7 +270,7 @@ fn run(self: *Benchmark) !SOF {
 fn parse_command(self: *Benchmark) !void {
     var args = process.args();
     self.exename = try args.next(self.arena) orelse {
-        return self.usageError(0, "unable to access command-line");
+        return self.usageError(0, "unable to access command-line", .{});
     };
 
     var pathname_index: usize = 0;
@@ -284,11 +278,11 @@ fn parse_command(self: *Benchmark) !void {
     while (true) : (index += 1) {
         var arg = try args.next(self.arena) orelse break;
         if (arg.len == 0) {
-            return self.usageError(index, "empty value");
+            return self.usageError(index, "empty value", .{});
         }
         if (arg[0] != '-') {
             if (pathname_index > 0) {
-                return self.usageError(index, "file already specified @index:{}", pathname_index);
+                return self.usageError(index, "file already specified @index:{}", .{pathname_index});
             }
             self.pathname = arg;
             pathname_index = index;
@@ -297,27 +291,27 @@ fn parse_command(self: *Benchmark) !void {
         var content = arg[1..];
 
         // detect unsupported use of arg stdin "-"
-        if (content.len == 0) return self.usageError(index, "unsupported: read from stdin");
+        if (content.len == 0) return self.usageError(index, "unsupported: read from stdin", .{});
 
         // long options
         if (content[0] == '-') {
             content = content[1..];
 
             // detect unsupported use of args handoff "--"
-            if (content.len == 0) return self.usageError(index, "unsupported: argument processing handoff");
+            if (content.len == 0) return self.usageError(index, "unsupported: argument processing handoff", .{});
 
             if (mem.eql(u8, content, "help")) {
                 self.mode = Mode.Help;
                 return;
             }
-            return self.usageError(index, "unrecognized option '{}'", arg);
+            return self.usageError(index, "unrecognized option '{}'", .{arg});
         }
 
         // single-hyphen processing (may be standalone or combinatory)
         const cx_end = '0' + atom_bnames.len;
         for (content) |c| {
             if (c >= '0' and c <= '9') {
-                if (c >= cx_end) return self.usageError(index, "case option '{c}' out of range", c);
+                if (c >= cx_end) return self.usageError(index, "case option '{c}' out of range", .{c});
                 const case_index = c - '0';
                 // silently ignore redundant selections
                 if (self.case_set.get(case_index) == null) {
@@ -335,33 +329,33 @@ fn parse_command(self: *Benchmark) !void {
                 },
                 'm' => {
                     arg = try args.next(self.arena) orelse {
-                        return self.usageError(index, "missing argument");
+                        return self.usageError(index, "missing argument", .{});
                     };
                     self.magnify = toUnsigned(arg) catch {
-                        return self.usageError(index, "invalid magnify number '{}'", arg);
+                        return self.usageError(index, "invalid magnify number '{}'", .{arg});
                     };
                 },
                 'r' => {
                     arg = try args.next(self.arena) orelse {
-                        return self.usageError(index, "missing argument");
+                        return self.usageError(index, "missing argument", .{});
                     };
                     self.repeat = toUnsigned(arg) catch {
-                        return self.usageError(index, "invalid repeat number '{}'", arg);
+                        return self.usageError(index, "invalid repeat number '{}'", .{arg});
                     };
                 },
                 's' => {
                     arg = try args.next(self.arena) orelse {
-                        return self.usageError(index, "missing argument");
+                        return self.usageError(index, "missing argument", .{});
                     };
                     self.rand_size = toUnsigned(arg) catch {
-                        return self.usageError(index, "invalid random buffer size '{}'", arg);
+                        return self.usageError(index, "invalid random buffer size '{}'", .{arg});
                     };
                 },
                 'v' => {
-                    if (self.uverbose != std.math.maxInt(@typeOf(self.uverbose))) self.uverbose += 1;
+                    if (self.uverbose != std.math.maxInt(@TypeOf(self.uverbose))) self.uverbose += 1;
                 },
                 else => {
-                    return self.usageError(index, "unrecognized option '{}'", arg);
+                    return self.usageError(index, "unrecognized option '{}'", .{arg});
                 },
             }
         }
@@ -407,42 +401,37 @@ fn listCases(self: Benchmark, verbose: bool) !void {
     var lines: Lines = undefined;
     if (verbose) {
         lines = Lines.init(self.arena);
-        var it = self.atoms.iterator();
-        while (it.next()) |atom| {
+        for (self.atoms.items) |atom| {
             try lines.resize(0);
             try splitLines(atom.descr, &lines);
-            var jt = lines.iterator();
-            while (jt.next()) |line| {
+            for (lines.items) |line| {
                 if (line.len > c2width) c2width = line.len;
             }
         }
     } else {
-        var it = self.atoms.iterator();
-        while (it.next()) |atom| {
+        for (self.atoms.items) |atom| {
             if (atom.name.len > c2width) c2width = atom.name.len;
         }
     }
 
-    try self.out("  ##  Benchmark Case\n");
-    var it = self.atoms.iterator();
-    while (it.next()) |atom| {
-        if (verbose or it.count == 1) {
-            try self.out("  --  ");
+    try self.out("  ##  Benchmark Case\n", .{});
+    for (self.atoms.items) |atom,i| {
+        if (verbose or i == 1) {
+            try self.out("  --  ", .{});
             try self.outPadText("", @truncate(u8, c2width), false, '-');
-            try self.out("\n");
+            try self.out("\n", .{});
         }
 
-        const width = indexForUnit(it.count - 1, 10);
+        const width = indexForUnit(i - 1, 10);
         const padw = if (width < 3) 3 - width else 0;
         try self.outPadText("", padw, false, ' ');
-        try self.out("{}  {}\n", it.count - 1, atom.name);
+        try self.out("{}  {}\n", .{i - 1, atom.name});
 
         if (!verbose) continue;
         try lines.resize(0);
         try splitLines(atom.descr, &lines);
-        var jt = lines.iterator();
-        while (jt.next()) |line| {
-            try self.out("      {}\n", line);
+        for (lines.items) |line| {
+            try self.out("      {}\n", .{line});
         }
     }
 }
@@ -451,15 +440,15 @@ fn generateData(self: *Benchmark) !void {
     // pad end-of-buffer
     // some benchmarks read 4-byets at a time so we'll just pad by 16
     const size = 1024 * 1024 * self.rand_size;
-    try self.out("generating {} random UTF-8 test data...\n", auto_b(size));
+    try self.out("generating {} random UTF-8 test data...\n", .{auto_b(size)});
     self.padded_data = try self.arena.alloc(u8, size + pad_size);
     self.data = self.padded_data[0..size];
     std.rand.DefaultPrng.init(0).random.bytes(self.data);
 }
 
 fn readData(self: *Benchmark) !SOF {
-    var file = fs.File.openRead(self.pathname) catch |err| {
-        try self.eout("unable to read file '{}': {}\n", self.pathname, err);
+    var file = fs.cwd().openFile(self.pathname, .{}) catch |err| {
+        try self.eout("unable to read file '{}': {}\n", .{self.pathname, err});
         return SOF.Failure;
     };
     defer file.close();
@@ -467,12 +456,12 @@ fn readData(self: *Benchmark) !SOF {
     const size = try file.getEndPos();
     // pad end-of-buffer
     // some benchmarks read 4-byets at a time so we'll just pad by 16
-    try self.out("reading {} UTF-8 test data '{}'...\n", auto_b(size), self.pathname);
+    try self.out("reading {} UTF-8 test data '{}'...\n", .{auto_b(size), self.pathname});
     self.padded_data = try self.arena.alignedAlloc(u8, mem.page_size, size + pad_size);
     self.data = self.padded_data[0..size];
 
     var adapter = file.inStream();
-    try adapter.stream.readNoEof(self.data[0..size]);
+    try adapter.readNoEof(self.data[0..size]);
     return SOF.Success;
 }
 
@@ -480,10 +469,10 @@ fn spinAtom(self: *Benchmark, atom: *Atom) !void {
     var total = Counters.make();
     var interval: Counters = undefined;
 
-    try self.out("benchmark: {}", atom.name);
+    try self.out("benchmark: {}", .{atom.name});
     try self.outPadText(" ", 65, false, '-');
-    try self.out("\n");
-    if (atom.descr.len != 0) try self.vout(2, "\n{}\n\n", atom.descr);
+    try self.out("\n", .{});
+    if (atom.descr.len != 0) try self.vout(2, "\n{}\n\n", .{atom.descr});
 
     var timer = try time.Timer.start();
     var rindex: usize = 0;
@@ -492,21 +481,21 @@ fn spinAtom(self: *Benchmark, atom: *Atom) !void {
         interval.reset();
         const start = timer.lap();
         atom.spin(atom, self.*, &interval, self.magnify) catch |err| {
-            try self.wout("aborting benchmark\n");
+            try self.wout("aborting benchmark\n", .{});
             break;
         };
         const end = timer.lap();
         interval.elapsed_s = if (start > end) 0 else (@intToFloat(f64, end - start) / time.ns_per_s);
         total.accumulate(interval);
 
-        try self.out("  ::  {}, {} data, {} codepoints, {} errors\n", auto_bs(interval.num_bytes, interval.elapsed_s), auto_b(interval.num_bytes), auto_n(interval.num_codepoints), auto_n(interval.num_errors));
+        try self.out("  ::  {}, {} data, {} codepoints, {} errors\n", .{auto_bs(interval.num_bytes, interval.elapsed_s), auto_b(interval.num_bytes), auto_n(interval.num_codepoints), auto_n(interval.num_errors)});
     }
     try self.out("\n" ++
         \\  average rate:           {}
         \\  total UTF8 data:        {}
         \\  total UTF8 codepoints:  {}
         \\  total UTF8 errors:      {}
-    ++ "\n\n", auto_bs(total.num_bytes, total.elapsed_s), auto_b(total.num_bytes), auto_n(total.num_codepoints), auto_n(total.num_errors));
+    ++ "\n\n", .{auto_bs(total.num_bytes, total.elapsed_s), auto_b(total.num_bytes), auto_n(total.num_codepoints), auto_n(total.num_errors)});
 }
 
 const pad_size: usize = 16;
@@ -596,23 +585,21 @@ const ValueUnit = struct {
     pub fn format(
         self: @This(),
         comptime fmt: []const u8,
-        comptime options: std.fmt.FormatOptions,
+        options: std.fmt.FormatOptions,
         context: var,
-        comptime Errors: type,
-        output: fn (@typeOf(context), []const u8) Errors!void,
-    ) Errors!void {
+    ) !void {
         switch (self.prec) {
             0 => {
-                try std.fmt.format(context, Errors, output, "{}{}{}", @floatToInt(usize, self.value), self.unit, self.rate);
+                try std.fmt.format(context, "{}{}{}", .{@floatToInt(usize, self.value), self.unit, self.rate});
             },
             1 => {
-                try std.fmt.format(context, Errors, output, "{d:.1}{}{}", self.value, self.unit, self.rate);
+                try std.fmt.format(context, "{d:.1}{}{}", .{self.value, self.unit, self.rate});
             },
             2 => {
-                try std.fmt.format(context, Errors, output, "{d:.2}{}{}", self.value, self.unit, self.rate);
+                try std.fmt.format(context, "{d:.2}{}{}", .{self.value, self.unit, self.rate});
             },
             3 => {
-                try std.fmt.format(context, Errors, output, "{d:.3}{}{}", self.value, self.unit, self.rate);
+                try std.fmt.format(context, "{d:.3}{}{}", .{self.value, self.unit, self.rate});
             },
         }
     }
