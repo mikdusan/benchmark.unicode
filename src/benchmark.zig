@@ -416,16 +416,17 @@ fn listCases(self: Benchmark, verbose: bool) !void {
 
     try self.out("  ##  Benchmark Case\n", .{});
     for (self.atoms.items) |atom,i| {
-        if (verbose or i == 1) {
+        const num = i + 1;
+        if (verbose or num == 1) {
             try self.out("  --  ", .{});
             try self.outPadText("", @truncate(u8, c2width), false, '-');
             try self.out("\n", .{});
         }
 
-        const width = indexForUnit(i - 1, 10);
+        const width = indexForUnit(num - 1, 10);
         const padw = if (width < 3) 3 - width else 0;
         try self.outPadText("", padw, false, ' ');
-        try self.out("{}  {}\n", .{i - 1, atom.name});
+        try self.out("{}  {}\n", .{num - 1, atom.name});
 
         if (!verbose) continue;
         try lines.resize(0);
