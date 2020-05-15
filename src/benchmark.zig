@@ -70,26 +70,26 @@ fn deinit(self: *Benchmark) void {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-fn out(self: Benchmark, comptime fmt: []const u8, args: var) !void {
+pub fn out(self: Benchmark, comptime fmt: []const u8, args: var) !void {
     if (self.uverbose < 1) return;
     try self.stdout.print(fmt, args);
 }
 
-fn wout(self: Benchmark, comptime fmt: []const u8, args: var) !void {
+pub fn wout(self: Benchmark, comptime fmt: []const u8, args: var) !void {
     if (self.uverbose < 1) return;
     try self.stdout.print("warning: " ++ fmt, args);
 }
 
-fn vout(self: Benchmark, verbosity: u2, comptime fmt: []const u8, args: var) !void {
+pub fn vout(self: Benchmark, verbosity: u2, comptime fmt: []const u8, args: var) !void {
     if (self.uverbose < verbosity) return;
     try self.stdout.print(fmt, args);
 }
 
-fn eout(self: Benchmark, comptime fmt: []const u8, args: var) !void {
+pub fn eout(self: Benchmark, comptime fmt: []const u8, args: var) !void {
     try self.stderr.print(fmt, args);
 }
 
-fn outPadText(self: Benchmark, text: []const u8, width: u8, right: bool, fill: u8) !void {
+pub fn outPadText(self: Benchmark, text: []const u8, width: u8, right: bool, fill: u8) !void {
     if (self.uverbose < 1) return;
     const padw = if (text.len > width) 0 else width - text.len;
     if (right) {
